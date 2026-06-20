@@ -39,9 +39,8 @@ export function AILeafPanel({ greenhouse }: { greenhouse: Greenhouse }) {
       <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -z-0 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70" />
 
       <SmartImage
-        src={['/images/tomato-leaf.jpg', '/images/tomato-leaf.png']}
+        src={['/images/tomato-leaf.png', '/images/tomato-leaf.jpg']}
         alt="Tomato leaf under AI analysis"
-        fade
         fit="contain"
         className="relative z-10 h-[300px] w-[320px]"
         imgClassName="drop-shadow-[0_18px_40px_rgba(31,42,36,0.18)]"

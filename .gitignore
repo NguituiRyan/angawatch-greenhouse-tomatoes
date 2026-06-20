@@ -18,3 +18,6 @@ Thumbs.db
 .idea/
 
 .vercel
+
+# large model binaries (loaded from HF CDN at runtime)
+web/public/models/*.onnx
