@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   BookOpen,
   ChevronDown,
@@ -20,10 +20,30 @@ const FILTERS: (DiseaseType | 'All')[] = ['All', 'Fungal', 'Bacterial', 'Viral',
  * Tomato Disease Library — a collapsible reference embedded in the Pest & Disease
  * screen. Master grid + detail panel. Factual reference; see config/diseases.ts.
  */
-export function DiseaseLibrary() {
+export function DiseaseLibrary({
+  selectedId: controlledId,
+  onSelect,
+}: {
+  selectedId?: string
+  onSelect?: (id: string) => void
+} = {}) {
   const [open, setOpen] = useState(true)
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('All')
-  const [selectedId, setSelectedId] = useState(DISEASES[0].id)
+  const [internalId, setInternalId] = useState(DISEASES[0].id)
+  const selectedId = controlledId ?? internalId
+  const setSelectedId = (id: string) => {
+    setInternalId(id)
+    onSelect?.(id)
+  }
+
+  // when another panel (forecast / detections feed) picks a disease, open the
+  // library and clear the filter so the chosen entry is visible.
+  useEffect(() => {
+    if (controlledId) {
+      setOpen(true)
+      setFilter('All')
+    }
+  }, [controlledId])
 
   const list = useMemo(
     () => (filter === 'All' ? DISEASES : DISEASES.filter((d) => d.type === filter)),
@@ -32,6 +52,7 @@ export function DiseaseLibrary() {
   const selected = DISEASES.find((d) => d.id === selectedId) ?? list[0] ?? DISEASES[0]
 
   return (
+    <div id="disease-library" className="scroll-mt-6">
     <GlassCard padding="md">
       <button
         type="button"
@@ -100,6 +121,7 @@ export function DiseaseLibrary() {
         </div>
       )}
     </GlassCard>
+    </div>
   )
 }
 
