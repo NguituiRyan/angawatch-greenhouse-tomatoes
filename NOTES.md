@@ -36,9 +36,19 @@ in-browser at mobile and desktop widths. Python: `py_compile` clean on all modul
   `model.py` (MobileNetV3/EfficientNet transfer learning), `train.py` (two-phase
   training, class weights, callbacks, confusion matrix), `export.py` (TFLite + ONNX).
 
+### Leaf disease AI (real, free, on-device)
+- The "Scan a leaf" camera/upload now runs **real inference in the browser** via
+  `onnxruntime-web` using the open PlantVillage EfficientNetV2-S model
+  (`baovm/plantvillage-efficientnetv2s`, 38 classes incl. all 10 tomato classes),
+  streamed from the Hugging Face CDN and cached — no server, no API key, no cost.
+  Chlorophyll + GLCM are computed from the real pixels. Verified: correct on
+  labelled late/early blight, septoria, yellow-leaf-curl images. See
+  `web/src/lib/leafModel.ts`. The mock `/ai` endpoint remains only as a fallback.
+
 ## 🟡 Stubbed / mocked (intentionally, per brief)
-- **Leaf-scan disease class** is a deterministic mock from image statistics; the
-  trained model is not bundled. `chl_index`/`glcm_level` are computed for real.
+- **First scan downloads ~80 MB** (the float32 model — the int8 build uses ops
+  onnxruntime-web can't run). Tuta absoluta has no class in this model (not in
+  PlantVillage); collect field images and fine-tune to add it.
 - **No real dataset / weights** — `ml/` downloads & trains on demand; the
   `Tuta_absoluta_damage` class needs field-collected images (TODO in `download_data.py`).
 - **Management** tab: live microclimate tiles only. Scheduling, crews, fertigation
