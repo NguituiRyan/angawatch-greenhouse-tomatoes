@@ -1,0 +1,9 @@
+node_modules
+web/node_modules
+web/dist
+**/__pycache__
+.venv
+ml/data
+ml/models
+ml/export
+.git
