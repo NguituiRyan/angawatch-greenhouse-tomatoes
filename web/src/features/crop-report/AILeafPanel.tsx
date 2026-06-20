@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react'
-import { Leaf, Upload, Loader2, AlertTriangle } from 'lucide-react'
+import { useState } from 'react'
+import { Leaf, ScanLine, AlertTriangle } from 'lucide-react'
 import { HealthRing } from '@/components/ui/HealthRing'
 import { TomatoLeaf } from '@/components/illustrations/TomatoLeaf'
 import { SmartImage } from '@/components/ui/SmartImage'
 import { Pill } from '@/components/ui/Pill'
-import { useLeafScan } from '@/api/hooks'
-import type { LeafScanResult } from '@/api/types'
+import { LeafScanDialog } from './LeafScanDialog'
+import type { Greenhouse, LeafScanResult } from '@/api/types'
 import { cn } from '@/lib/cn'
 
 const DEFAULT_SCAN: LeafScanResult = {
@@ -25,18 +25,12 @@ const DEFAULT_SCAN: LeafScanResult = {
 /**
  * The AI Tomato-Leaf Vision panel: a leaf with radial callout tags driven by the
  * model output — chlorophyll index ("Chl"), GLCM texture/severity, and the
- * Health-Score ring. Upload a leaf photo to run a live scan (POST /ai/leaf-scan).
+ * Health-Score ring. "Scan a leaf" opens the camera/upload dialog, which returns
+ * the diagnosis plus a specific farm action plan.
  */
-export function AILeafPanel() {
+export function AILeafPanel({ greenhouse }: { greenhouse: Greenhouse }) {
   const [scan, setScan] = useState<LeafScanResult>(DEFAULT_SCAN)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const { mutate, isPending } = useLeafScan()
-
-  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    mutate(file, { onSuccess: setScan })
-  }
+  const [open, setOpen] = useState(false)
 
   return (
     <div className="relative mx-auto flex min-h-[440px] w-full max-w-[560px] flex-col items-center justify-center px-4 py-6">
@@ -94,19 +88,20 @@ export function AILeafPanel() {
         </div>
       )}
 
-      {/* upload control */}
+      {/* scan control */}
       <div className="absolute right-2 top-2 z-30 sm:right-4">
-        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
         <button
           type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={isPending}
-          className="glass-strong inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-medium text-ink transition hover:text-health-deep disabled:opacity-60"
+          onClick={() => setOpen(true)}
+          className="glass-strong inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-medium text-ink transition hover:text-health-deep"
         >
-          {isPending ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-          {isPending ? 'Analysing…' : 'Scan leaf'}
+          <ScanLine size={14} /> Scan a leaf
         </button>
       </div>
+
+      {open && (
+        <LeafScanDialog greenhouse={greenhouse} onClose={() => setOpen(false)} onResult={setScan} />
+      )}
     </div>
   )
 }

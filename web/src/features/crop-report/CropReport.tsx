@@ -28,7 +28,7 @@ export function CropReport({
 
       {/* centre column */}
       <div className="order-first flex flex-col justify-between gap-5 lg:order-none">
-        <AILeafPanel />
+        <AILeafPanel greenhouse={greenhouse} />
         <PredictionBar greenhouse={greenhouse} />
       </div>
 
