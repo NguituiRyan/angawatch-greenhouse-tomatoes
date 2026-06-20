@@ -1,6 +1,7 @@
 import { Sprout, Wheat, Warehouse } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { IconStat } from '@/components/ui/IconStat'
+import { SmartImage } from '@/components/ui/SmartImage'
 import { AerialMap } from '@/components/illustrations/AerialMap'
 import { UserCard } from './UserCard'
 import { useStats, useAgronomist } from '@/api/hooks'
@@ -17,7 +18,12 @@ export function AerialMapCard({ greenhouse }: { greenhouse: Greenhouse }) {
 
       <div className="grid grid-cols-[1fr_auto] gap-4">
         <div className="h-[150px] overflow-hidden rounded-inner ring-1 ring-white/60">
-          <AerialMap />
+          <SmartImage
+            src="/images/aerial-farm.jpg"
+            alt="Aerial view of the greenhouse farm"
+            className="h-full w-full"
+            fallback={<AerialMap />}
+          />
         </div>
 
         <div className="flex flex-col justify-between gap-3 py-1">
