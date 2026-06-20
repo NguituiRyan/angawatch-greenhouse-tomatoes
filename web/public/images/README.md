@@ -7,8 +7,9 @@ incrementally. Any common web format works, but keep the filename/extension belo
 ## Required (the photos you provided)
 | File | Used by |
 |------|---------|
-| `tomato-leaf.png` | Centre AI Leaf Panel (Crop Report) — the compound tomato leaf |
-| `cherry-tomatoes.png` | Decorative accent on the Health Tracking card |
+| `tomato-leaf.jpg` | Centre AI Leaf Panel (Crop Report) — the tomato leaf |
+| `cherry-tomatoes.jpg` | Decorative accent on the Health Tracking card |
+| `aerial-farm.jpg` | Aerial photo on the farm overview card |
 
 ## Disease Library (optional — `web/public/images/diseases/`)
 One photo per disease. Missing files fall back to a placeholder tile.
