@@ -1,0 +1,19 @@
+# AngaWatch Greenhouse - /ai mock inference service
+# Core runtime dependencies for the FastAPI mock leaf-scan service.
+
+fastapi
+uvicorn[standard]
+python-multipart
+pillow
+numpy
+scikit-image
+pydantic>=2
+
+# ---------------------------------------------------------------------------
+# OPTIONAL: real-model inference (not required for the mock to run).
+# Uncomment one of these once a trained model is exported from /ml and you
+# wire it up via the MODEL_PATH seam in predictor.py.
+#
+# tensorflow        # for a .tflite / SavedModel classifier
+# onnxruntime       # for an exported .onnx classifier
+# ---------------------------------------------------------------------------

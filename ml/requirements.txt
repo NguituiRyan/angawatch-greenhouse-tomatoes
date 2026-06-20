@@ -1,0 +1,17 @@
+# AngaWatch Greenhouse - ML training pipeline dependencies
+# -------------------------------------------------------
+# Install with:   pip install -r requirements.txt
+#
+# GPU is OPTIONAL. The CPU build of TensorFlow works for everything here
+# (training will just be slower). To use a GPU, install the matching CUDA /
+# cuDNN runtime for your TensorFlow version, or use `tensorflow[and-cuda]`
+# on Linux. On Windows, GPU support beyond TF 2.10 requires WSL2.
+
+tensorflow>=2.15,<2.17      # Keras 3 ships with TF 2.16+; code targets tf.keras
+numpy>=1.24,<2.0            # pinned <2.0 for broad TF/skimage compatibility
+pillow>=10.0               # image loading for Keras + manual decoding
+scikit-image>=0.22         # GLCM texture features (graycomatrix/graycoprops)
+scikit-learn>=1.3          # class weights, classification_report, confusion_matrix
+matplotlib>=3.7            # confusion-matrix plot
+tf2onnx>=1.16             # Keras/TF -> ONNX export
+onnx>=1.15               # ONNX model container used by tf2onnx

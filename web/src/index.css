@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ---- Core palette (mirrors tailwind.config.js for raw CSS use) ---- */
+  --c-lime: #a3cb38;
+  --c-lime-soft: #c7e06a;
+  --c-lime-tint: #eef6d8;
+  --c-health: #8bc34a;
+  --c-health-light: #9ccc65;
+  --c-health-deep: #6fb23e;
+  --c-ink: #1f2a24;
+  --c-sage: #8c9389;
+
+  --c-spectrum-red: #e8553e;
+  --c-spectrum-amber: #e8a23d;
+  --c-spectrum-lime: #a3cb38;
+  --c-spectrum-green: #6fb23e;
+
+  /* ---- Glass surface ---- */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-strong: rgba(255, 255, 255, 0.84);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+  color: var(--c-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+@layer components {
+  /* Frosted-glass card — the signature surface from the reference design */
+  .glass {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-strong {
+    background: var(--glass-bg-strong);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* The left→right risk/suitability gradient used by SpectrumBar & PredictionBar */
+  .spectrum-gradient {
+    background: linear-gradient(
+      90deg,
+      var(--c-spectrum-red) 0%,
+      var(--c-spectrum-amber) 33%,
+      var(--c-spectrum-lime) 66%,
+      var(--c-spectrum-green) 100%
+    );
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* thin, custom scrollbars to keep the airy aesthetic */
+  .scroll-slim::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scroll-slim::-webkit-scrollbar-thumb {
+    background: rgba(140, 147, 137, 0.35);
+    border-radius: 999px;
+  }
+  .scroll-slim::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
