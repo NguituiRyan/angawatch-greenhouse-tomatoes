@@ -1,4 +1,5 @@
 import { GlassCard } from '@/components/ui/GlassCard'
+import { SmartImage } from '@/components/ui/SmartImage'
 import { AIInsightsPill } from '@/components/ui/AIInsightsPill'
 import { StatBlock } from '@/components/ui/StatBlock'
 import { DottedActivityRow } from '@/components/ui/DottedActivityRow'
@@ -28,7 +29,15 @@ export function HealthTrackingCard({
 
   return (
     <GlassCard menu className="relative overflow-hidden">
-      <h2 className="mb-3 pr-8 text-base font-semibold text-ink">Health Tracking</h2>
+      {/* cherry-tomato accent (add web/public/images/cherry-tomatoes.png) */}
+      <SmartImage
+        src="/images/cherry-tomatoes.png"
+        alt=""
+        fade
+        fallback={null}
+        className="pointer-events-none absolute -bottom-2 right-0 z-0 h-28 w-40 opacity-95"
+      />
+      <h2 className="relative z-10 mb-3 pr-8 text-base font-semibold text-ink">Health Tracking</h2>
 
       <div className="flex items-center justify-between gap-2 rounded-inner bg-white/45 px-3 py-2.5">
         <span className="text-sm font-medium text-ink">
@@ -53,7 +62,7 @@ export function HealthTrackingCard({
 
       <Pagination
         label={`${greenhouse.name} · ${greenhouse.cropVariety}`}
-        className="mt-6 border-t border-white/50 pt-4"
+        className="relative z-10 mt-6 border-t border-white/50 pt-4"
       />
     </GlassCard>
   )

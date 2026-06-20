@@ -3,6 +3,7 @@ import { TutaTrackerCard } from './TutaTrackerCard'
 import { LeafDetectionsFeed } from './LeafDetectionsFeed'
 import { RecommendationsList } from './RecommendationsList'
 import { GreenhousePressureGrid } from './GreenhousePressureGrid'
+import { DiseaseLibrary } from './DiseaseLibrary'
 import type { Greenhouse } from '@/api/types'
 
 /**
@@ -30,6 +31,8 @@ export function PestDisease({
       </div>
 
       <RecommendationsList greenhouse={greenhouse} />
+
+      <DiseaseLibrary />
     </div>
   )
 }

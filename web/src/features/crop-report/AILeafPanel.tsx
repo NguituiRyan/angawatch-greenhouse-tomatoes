@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Leaf, Upload, Loader2, AlertTriangle } from 'lucide-react'
 import { HealthRing } from '@/components/ui/HealthRing'
 import { TomatoLeaf } from '@/components/illustrations/TomatoLeaf'
+import { SmartImage } from '@/components/ui/SmartImage'
 import { Pill } from '@/components/ui/Pill'
 import { useLeafScan } from '@/api/hooks'
 import type { LeafScanResult } from '@/api/types'
@@ -43,7 +44,15 @@ export function AILeafPanel() {
       <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -z-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/60 opacity-70" />
       <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -z-0 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70" />
 
-      <TomatoLeaf className="relative z-10 h-[300px] w-auto" />
+      <SmartImage
+        src="/images/tomato-leaf.png"
+        alt="Tomato leaf under AI analysis"
+        fade
+        fit="contain"
+        className="relative z-10 h-[300px] w-[320px]"
+        imgClassName="drop-shadow-[0_18px_40px_rgba(31,42,36,0.18)]"
+        fallback={<TomatoLeaf className="relative z-10 h-[300px] w-auto" />}
+      />
 
       {/* callout: chlorophyll index ("Leaf · Chl") */}
       <Callout className="left-1/2 top-2 -translate-x-1/4 sm:left-[58%]">
