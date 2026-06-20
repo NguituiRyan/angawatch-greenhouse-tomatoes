@@ -171,6 +171,7 @@ export function LeafScanDialog({
         )}
 
         {step === 'choose' && (
+          <div>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={openCamera}
@@ -188,6 +189,10 @@ export function LeafScanDialog({
               <span className="text-sm font-semibold text-ink">Upload a photo</span>
               <span className="text-[11px] text-sage">From your device</span>
             </button>
+          </div>
+            <p className="mt-3 text-center text-[11px] text-sage">
+              For best accuracy: one leaf filling the frame, plain background, good light.
+            </p>
           </div>
         )}
 
@@ -246,6 +251,34 @@ export function LeafScanDialog({
                 </div>
               </div>
             </div>
+
+            {result.low_confidence && (
+              <div className="flex items-start gap-2 rounded-inner bg-spectrum-amber/15 p-3 text-xs text-ink">
+                <AlertTriangle size={15} className="mt-0.5 shrink-0 text-spectrum-amber" />
+                <span>
+                  <b>Unsure about this one.</b> For a reliable result, photograph a single leaf
+                  filling the frame, on a plain background, in good light — then scan again.
+                </span>
+              </div>
+            )}
+
+            {result.alternatives && result.alternatives.length > 0 && (
+              <div className="rounded-inner bg-white/45 p-3">
+                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-sage">
+                  Other possibilities
+                </div>
+                <ul className="space-y-1">
+                  {result.alternatives.map((a, i) => (
+                    <li key={i} className="flex items-center justify-between text-xs text-ink">
+                      <span className="truncate">{a.label}</span>
+                      <span className="ml-2 tabular-nums text-sage">
+                        {Math.round(a.confidence * 100)}%
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {plan.immediate.length > 0 && (
               <Section icon={Stethoscope} title="Treat it now" tone="text-spectrum-red">

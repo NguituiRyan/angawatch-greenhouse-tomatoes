@@ -10,7 +10,7 @@
  * If the model can't load/run, the caller falls back to the mock endpoint.
  */
 import type { LeafScanResult, Severity } from '@/api/types'
-import { LEAF_CLASS_LABELS, type LeafClass } from '@/config/tomato'
+import { LEAF_CLASS_LABELS, LEAF_CLASSES, type LeafClass } from '@/config/tomato'
 
 // Model is loaded from the Hugging Face CDN (free, CORS-enabled, cached by the
 // browser) so the 80 MB file doesn't bloat the repo. Override with VITE_LEAF_MODEL_URL.
@@ -39,6 +39,17 @@ const PV_TO_CLASS: Record<string, LeafClass> = {
 let INPUT_SIZE = 224
 const MEAN = [0.485, 0.456, 0.406]
 const STD = [0.229, 0.224, 0.225]
+
+// Input layout of the configured model:
+//   'nchw-imagenet' (default) — the PyTorch PlantVillage model (NCHW, ImageNet-normalized)
+//   'nhwc-raw'                — a Keras/EfficientNet model from ml/train_field_model.py
+//                               (NHWC, raw 0..255; preprocessing baked into the graph)
+const LAYOUT = import.meta.env.VITE_LEAF_MODEL_LAYOUT ?? 'nchw-imagenet'
+
+const isTomato = (l?: string) => !!l && l.toLowerCase().startsWith('tomato')
+function toClass(label: string): LeafClass | undefined {
+  return PV_TO_CLASS[label] ?? (LEAF_CLASSES.includes(label as LeafClass) ? (label as LeafClass) : undefined)
+}
 
 type Ort = typeof import('onnxruntime-web')
 let bootstrap: Promise<{ ort: Ort; session: import('onnxruntime-web').InferenceSession }> | null = null
@@ -76,22 +87,51 @@ function toCanvas(bmp: ImageBitmap | HTMLImageElement, size: number) {
   c.width = size
   c.height = size
   const ctx = c.getContext('2d', { willReadFrequently: true })!
-  // letterbox onto white so non-square photos keep aspect ratio
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, size, size)
   const w = (bmp as ImageBitmap).width || (bmp as HTMLImageElement).naturalWidth
   const h = (bmp as ImageBitmap).height || (bmp as HTMLImageElement).naturalHeight
-  const scale = Math.min(size / w, size / h)
+  // center-crop "cover" (standard ImageNet-style eval) — fills the square with the
+  // middle of the photo, which matches training far better than white letterboxing.
+  const scale = Math.max(size / w, size / h)
   const dw = w * scale
   const dh = h * scale
   ctx.drawImage(bmp as CanvasImageSource, (size - dw) / 2, (size - dh) / 2, dw, dh)
   return ctx.getImageData(0, 0, size, size)
 }
 
+/** "Tomato___Late_blight" -> "Tomato — Late blight" */
+function prettyLabel(pv: string): string {
+  if (!pv) return 'Unknown'
+  let crop: string
+  let cond: string
+  if (pv.includes('___')) {
+    const [c, ...rest] = pv.split('___')
+    crop = c
+    cond = rest.join(' ')
+  } else {
+    const parts = pv.split('_')
+    crop = parts[0]
+    cond = parts.slice(1).join(' ')
+  }
+  crop = crop.replace(/_/g, ' ').replace(/\s*\(.*?\)/g, '').trim()
+  cond = cond.replace(/_/g, ' ').trim() || 'healthy'
+  return `${crop} — ${cond}`
+}
+
 function toTensor(ort: Ort, img: ImageData, size: number) {
   const { data } = img
-  const f = new Float32Array(3 * size * size)
   const area = size * size
+  if (LAYOUT === 'nhwc-raw') {
+    // NHWC, raw 0..255 — a Keras/EfficientNet model bakes its own preprocessing
+    const f = new Float32Array(area * 3)
+    for (let i = 0; i < area; i++) {
+      f[i * 3] = data[i * 4]
+      f[i * 3 + 1] = data[i * 4 + 1]
+      f[i * 3 + 2] = data[i * 4 + 2]
+    }
+    return new ort.Tensor('float32', f, [1, size, size, 3])
+  }
+  // NCHW, ImageNet-normalized
+  const f = new Float32Array(3 * area)
   for (let i = 0; i < area; i++) {
     f[i] = (data[i * 4] / 255 - MEAN[0]) / STD[0]
     f[area + i] = (data[i * 4 + 1] / 255 - MEAN[1]) / STD[1]
@@ -183,13 +223,16 @@ export async function classifyLeaf(file: File): Promise<LeafScanResult> {
   const probs = softmax(logits)
   const order = probs.map((_, i) => i).sort((a, b) => probs[b] - probs[a])
   const top = order[0]
-  const topIsTomato = labels[top]?.startsWith('Tomato___')
+  const topIsTomato = isTomato(labels[top])
   // a tomato farm scans tomato leaves — prefer the best tomato class for the diagnosis
-  const chosen = topIsTomato ? top : (order.find((i) => labels[i]?.startsWith('Tomato___')) ?? top)
-  const chosenLabel = labels[chosen]
-  const cls: LeafClass = PV_TO_CLASS[chosenLabel] ?? 'Tomato_healthy'
+  const chosen = topIsTomato ? top : (order.find((i) => isTomato(labels[i])) ?? top)
+  const cls: LeafClass = toClass(labels[chosen]) ?? 'Tomato_healthy'
   const confidence = probs[chosen]
   const healthy = cls === 'Tomato_healthy'
+  const lowConfidence = confidence < 0.5 || !topIsTomato
+  const alternatives = order
+    .slice(0, 3)
+    .map((i) => ({ label: prettyLabel(labels[i]), confidence: probs[i] }))
 
   const { chl, glcm } = leafMetrics(metricsImg)
   const severity = severityFrom(healthy, glcm, confidence)
@@ -198,6 +241,14 @@ export async function classifyLeaf(file: File): Promise<LeafScanResult> {
     Math.min(100, Math.round((healthy ? 92 : 55) - (glcm - 0.3) * 45 + (chl - 0.5) * 30)),
   )
   const label = LEAF_CLASS_LABELS[cls]
+
+  const retake =
+    'Low confidence — retake with one leaf filling the frame, a plain background and good light.'
+  const recommendation = lowConfidence
+    ? `${retake}${topIsTomato ? ` Best guess: ${label}.` : ` Top guess wasn't a tomato leaf (${prettyLabel(labels[top])}).`}`
+    : healthy
+      ? 'Healthy canopy — maintain temperature 21–27°C and RH 65–75%.'
+      : `${label} detected — see the action plan to treat and adjust conditions.`
 
   return {
     disease: cls,
@@ -208,12 +259,10 @@ export async function classifyLeaf(file: File): Promise<LeafScanResult> {
     health_score: health,
     severity,
     is_healthy: healthy,
-    recommendation: healthy
-      ? 'Healthy canopy — maintain temperature 21–27°C and RH 65–75%.'
-      : !topIsTomato
-        ? `Best tomato match: ${label}. For accuracy, fill the frame with a single tomato leaf.`
-        : `${label} detected — see the action plan to treat and adjust conditions.`,
+    recommendation,
     scanned_at: new Date().toISOString(),
     model_version: MODEL_VERSION,
+    alternatives,
+    low_confidence: lowConfidence,
   }
 }

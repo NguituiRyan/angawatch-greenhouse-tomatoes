@@ -1,5 +1,42 @@
 # AngaWatch Greenhouse — ML training pipeline (`/ml`)
 
+## ⭐ Get accurate results on REAL field photos (free Colab GPU)
+
+The app's default model is trained on PlantVillage (lab photos). It's excellent on
+lab images but unreliable on real phone photos of plants in the field — the
+"domain gap". To fix that, train your **own** model on field + lab data:
+
+1. Open **[Google Colab](https://colab.research.google.com)** → Runtime → Change
+   runtime type → **GPU** (free T4).
+2. Upload **`train_field_model.py`** and run:
+   ```bash
+   !pip -q install tensorflow tf2onnx onnx kagglehub scikit-learn
+   # add your Kaggle token (kaggle.com → Account → Create New Token), then:
+   !python train_field_model.py
+   ```
+   It downloads **PlantVillage (lab)** + **PlantDoc (field)**, merges the tomato
+   classes, trains EfficientNet-B0 with heavy augmentation, and exports
+   `export/tomato_field_model.onnx` + `export/class_names.json`.
+3. Host the `.onnx` somewhere public (a free Hugging Face model repo is easiest),
+   then point the app at it — **no rebuild needed** — via `web/.env.local`:
+   ```
+   VITE_LEAF_MODEL_URL=https://<your-host>/tomato_field_model.onnx
+   VITE_LEAF_MODEL_LAYOUT=nhwc-raw
+   ```
+   and copy `class_names.json` → `web/public/models/plant-disease-labels.json`.
+   (The front-end already supports this model's NHWC/raw-input layout and the
+   `Tomato_*` label names — see `web/src/lib/leafModel.ts`.)
+4. Best results come from adding **your own** greenhouse photos under
+   `data/field/<ClassName>/` before training — that adapts the model to your
+   plants, phone and lighting. Tip: this is also how you'd add a real
+   `Tuta_absoluta_damage` class (no public dataset covers it well).
+
+> Leaves only. Fruit/stem/root disease datasets are scarce; collect & label your
+> own to extend coverage.
+
+---
+
+
 Transfer-learning pipeline (TensorFlow / Keras) that trains a tomato-leaf
 disease classifier on the **PlantVillage tomato subset** plus a custom
 field-collected **Tuta absoluta** class, then exports edge-ready **TFLite** and

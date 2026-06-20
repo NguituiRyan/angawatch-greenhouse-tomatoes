@@ -157,6 +157,10 @@ export interface LeafScanResult {
   recommendation: string
   scanned_at: string
   model_version: string
+  /** top alternative predictions (incl. non-tomato), most likely first */
+  alternatives?: { label: string; confidence: number }[]
+  /** true when the model is unsure or the top guess isn't a tomato leaf */
+  low_confidence?: boolean
 }
 
 export interface LeafDetection extends LeafScanResult {
