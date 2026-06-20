@@ -11,6 +11,10 @@ incrementally. Any common web format works, but keep the filename/extension belo
 | `cherry-tomatoes.jpg` | Decorative accent on the Health Tracking card |
 | `aerial-farm.jpg` | Aerial photo on the farm overview card |
 
+> `tomato-leaf` and `cherry-tomatoes` load as either **`.jpg` or `.png`** — save your
+> file with that base name in either format and it just works. To use your own,
+> overwrite the file here, then commit & push (auto-deploys).
+
 ## Disease Library (optional — `web/public/images/diseases/`)
 One photo per disease. Missing files fall back to a placeholder tile.
 

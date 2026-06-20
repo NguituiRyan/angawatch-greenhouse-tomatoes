@@ -31,7 +31,7 @@ export function HealthTrackingCard({
     <GlassCard menu className="relative overflow-hidden">
       {/* cherry-tomato accent (add web/public/images/cherry-tomatoes.png) */}
       <SmartImage
-        src="/images/cherry-tomatoes.jpg"
+        src={['/images/cherry-tomatoes.jpg', '/images/cherry-tomatoes.png']}
         alt=""
         fade
         fallback={null}
