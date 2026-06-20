@@ -116,7 +116,8 @@ export function DiseaseLibrary({
             >
               The Spruce
             </a>
-            ). Guidance only — confirm treatments, rates and local regulations with your agronomist.
+). Photos: PlantVillage dataset &amp; Wikimedia Commons. Guidance only — confirm
+            treatments, rates and local regulations with your agronomist.
           </p>
         </div>
       )}
