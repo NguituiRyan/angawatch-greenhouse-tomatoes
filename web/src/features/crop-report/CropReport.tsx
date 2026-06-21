@@ -1,38 +1,47 @@
-import { GreenhouseMonitoringCard } from './GreenhouseMonitoringCard'
+import { GreenhouseStatusCard } from './GreenhouseStatusCard'
 import { HealthTrackingCard } from './HealthTrackingCard'
 import { AILeafPanel } from './AILeafPanel'
-import { PredictionBar } from './PredictionBar'
+import { TodaysPriority } from './TodaysPriority'
 import { AerialMapCard } from './AerialMapCard'
 import { PlantSection } from './PlantSection'
 import type { Greenhouse } from '@/api/types'
 
 /**
- * Crop Report — the default view. Three-column layout matching the reference:
- * monitoring + health on the left, the AI leaf panel in the centre,
- * farm overview + plant scans on the right.
+ * Crop Report — the default view. Leads with plain-language greenhouse advisories
+ * (left), the AI leaf scanner + today's priority (centre), and the farm overview
+ * + scan summary (right).
  */
 export function CropReport({
   greenhouse,
   onInsights,
+  onPrevGreenhouse,
+  onNextGreenhouse,
 }: {
   greenhouse: Greenhouse
   onInsights?: () => void
+  onPrevGreenhouse?: () => void
+  onNextGreenhouse?: () => void
 }) {
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[330px_minmax(0,1fr)_330px]">
-      {/* left column */}
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[340px_minmax(0,1fr)_330px]">
+      {/* left column — what's happening + what to do */}
       <div className="flex flex-col gap-5">
-        <GreenhouseMonitoringCard greenhouse={greenhouse} />
-        <HealthTrackingCard greenhouse={greenhouse} onInsights={onInsights} />
+        <GreenhouseStatusCard greenhouse={greenhouse} />
+        <HealthTrackingCard
+          greenhouse={greenhouse}
+          onInsights={onInsights}
+          onPrev={onPrevGreenhouse}
+          onNext={onNextGreenhouse}
+        />
       </div>
 
-      {/* centre column */}
-      <div className="order-first flex flex-col justify-between gap-5 lg:order-none">
+      {/* centre column — AI leaf scanner + the one thing to do now */}
+      <div className="order-first flex flex-col gap-5 lg:order-none">
         <AILeafPanel greenhouse={greenhouse} />
-        <PredictionBar greenhouse={greenhouse} />
+        <TodaysPriority greenhouse={greenhouse} />
       </div>
 
-      {/* right column */}
+      {/* right column — farm overview + scans */}
       <div className="flex flex-col gap-5">
         <AerialMapCard greenhouse={greenhouse} />
         <PlantSection />

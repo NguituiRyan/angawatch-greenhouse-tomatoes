@@ -71,7 +71,7 @@ export function AILeafPanel({ greenhouse }: { greenhouse: Greenhouse }) {
 
       {/* Health-Score ring */}
       <div className="absolute bottom-4 right-2 z-20 sm:right-6">
-        <HealthRing value={scan.health_score} size={108} />
+        <HealthRing value={scan.health_score} size={84} stroke={8} />
       </div>
 
       {/* disease banner when not healthy */}

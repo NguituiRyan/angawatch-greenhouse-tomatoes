@@ -27,6 +27,8 @@ export function TopNav({ active, onChange, alertCount }: TopNavProps) {
         <button
           type="button"
           aria-label="Notifications"
+          title="View alerts & recommendations"
+          onClick={() => onChange('pest-disease')}
           className="glass relative grid h-11 w-11 place-items-center rounded-full text-ink transition hover:text-health-deep"
         >
           <Bell size={18} strokeWidth={1.8} />

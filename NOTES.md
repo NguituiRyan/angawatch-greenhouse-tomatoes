@@ -60,6 +60,17 @@ in-browser at mobile and desktop widths. Python: `py_compile` clean on all modul
   rather than photography, to avoid external image dependencies.
 - **Auth / multi-tenant / real notifications** — not in scope here.
 
+## 📚 Agronomy sources (thresholds & advisories)
+The greenhouse thresholds in `web/src/config/tomato.ts` and the plain-language
+advisories in `web/src/lib/greenhouseStatus.ts` (incl. VPD) are grounded in:
+- Bayer Vegetables — *Temperature, Humidity & Water in Protected-Culture Tomatoes*
+  (day 21–27 °C, night 17–18 °C; RH optimum ~70%, >80% impairs pollination).
+- Shamshiri et al. 2018 (USDA-ARS) — *Review of optimum temperature, humidity and
+  vapour-pressure deficit for greenhouse tomato* (VPD ~0.8–1.2 kPa).
+- Alabama Cooperative Extension — *Greenhouse Tomato Production*.
+- Disease microclimate triggers: PlantVillage + standard plant-pathology references
+  (late blight RH ≥ 90% & 10–26 °C; leaf mould RH > 85%, etc.).
+
 ## ▶️ Suggested next steps
 1. Collect & label `Tuta_absoluta_damage` images; run `ml/train.py`, then point
    `ai/` at the exported model (set `LEAF_MODEL_PATH`).

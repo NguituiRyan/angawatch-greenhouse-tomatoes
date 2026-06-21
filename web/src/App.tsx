@@ -49,6 +49,13 @@ export default function App() {
 
   const alertCount = (alerts ?? []).filter((a) => !a.acknowledged).length
 
+  const cycleGreenhouse = (dir: number) => {
+    if (!greenhouses?.length) return
+    const i = greenhouses.findIndex((g) => g.id === selectedId)
+    const next = greenhouses[(Math.max(0, i) + dir + greenhouses.length) % greenhouses.length]
+    setSelectedId(next.id)
+  }
+
   return (
     <AppShell>
       <TopNav active={tab} onChange={setTab} alertCount={alertCount} />
@@ -64,7 +71,12 @@ export default function App() {
 
       <main className="mt-6">
         {tab === 'crop-report' && (
-          <CropReport greenhouse={greenhouse} onInsights={() => setTab('pest-disease')} />
+          <CropReport
+            greenhouse={greenhouse}
+            onInsights={() => setTab('pest-disease')}
+            onPrevGreenhouse={() => cycleGreenhouse(-1)}
+            onNextGreenhouse={() => cycleGreenhouse(1)}
+          />
         )}
         {tab === 'pest-disease' && (
           <PestDisease greenhouse={greenhouse} selectedId={selectedId} onSelect={setSelectedId} />

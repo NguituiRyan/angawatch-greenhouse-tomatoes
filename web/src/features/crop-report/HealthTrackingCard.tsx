@@ -14,9 +14,13 @@ import type { Greenhouse } from '@/api/types'
 export function HealthTrackingCard({
   greenhouse,
   onInsights,
+  onPrev,
+  onNext,
 }: {
   greenhouse: Greenhouse
   onInsights?: () => void
+  onPrev?: () => void
+  onNext?: () => void
 }) {
   const { data } = useLight(greenhouse.id)
 
@@ -62,6 +66,8 @@ export function HealthTrackingCard({
 
       <Pagination
         label={`${greenhouse.name} · ${greenhouse.cropVariety}`}
+        onPrev={onPrev}
+        onNext={onNext}
         className="relative z-10 mt-6 border-t border-white/50 pt-4"
       />
     </GlassCard>

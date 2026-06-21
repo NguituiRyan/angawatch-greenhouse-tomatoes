@@ -12,6 +12,14 @@ const GRAIN =
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-[#EEF1EA] via-[#E9EDE4] to-[#E2E8DC]">
+      {/* shared SVG distortion filter for the liquid-glass cards */}
+      <svg aria-hidden width="0" height="0" className="absolute">
+        <filter id="angawatch-glass" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves="2" seed="7" result="n" />
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="48" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </svg>
+
       {/* floating colour orbs */}
       <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="animate-float-orb absolute -left-32 -top-24 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(163,203,56,0.30),transparent_65%)] blur-2xl" />
