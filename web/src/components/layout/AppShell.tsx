@@ -11,25 +11,21 @@ const GRAIN =
  */
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-[#EEF1EA] via-[#E9EDE4] to-[#E2E8DC]">
-      {/* shared SVG distortion filter for the liquid-glass cards */}
-      <svg aria-hidden width="0" height="0" className="absolute">
-        <filter id="angawatch-glass" x="0" y="0" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves="2" seed="7" result="n" />
-          <feDisplacementMap in="SourceGraphic" in2="n" scale="48" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </svg>
-
-      {/* floating colour orbs */}
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-[#E4EEDB] via-[#D7E6D0] to-[#C6DCC6]">
+      {/* vivid floating colour orbs — give the frosted glass something to refract */}
       <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="animate-float-orb absolute -left-32 -top-24 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(163,203,56,0.30),transparent_65%)] blur-2xl" />
+        <div className="animate-float-orb absolute -left-28 -top-28 h-[36rem] w-[36rem] rounded-full bg-[radial-gradient(circle,rgba(163,203,56,0.55),transparent_62%)]" />
         <div
-          className="animate-float-orb absolute -right-24 top-10 h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(circle,rgba(111,178,62,0.26),transparent_65%)] blur-2xl"
+          className="animate-float-orb absolute -right-24 top-0 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(56,168,118,0.48),transparent_62%)]"
           style={{ animationDelay: '-6s' }}
         />
         <div
-          className="animate-float-orb absolute bottom-[-10rem] left-1/3 h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(circle,rgba(120,200,170,0.22),transparent_65%)] blur-2xl"
+          className="animate-float-orb absolute bottom-[-12rem] left-[28%] h-[36rem] w-[36rem] rounded-full bg-[radial-gradient(circle,rgba(54,182,182,0.4),transparent_62%)]"
           style={{ animationDelay: '-11s' }}
+        />
+        <div
+          className="animate-float-orb absolute right-[10%] bottom-[6%] h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle,rgba(255,196,120,0.34),transparent_62%)]"
+          style={{ animationDelay: '-3s' }}
         />
       </div>
 
@@ -37,7 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div
         aria-hidden
         className="pointer-events-none fixed inset-x-0 top-0 h-64"
-        style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), transparent)' }}
+        style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45), transparent)' }}
       />
 
       {/* film grain */}
