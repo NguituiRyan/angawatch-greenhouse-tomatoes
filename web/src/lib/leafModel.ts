@@ -82,6 +82,12 @@ export function warmupLeafModel() {
   getSession().catch(() => {})
 }
 
+/** Real chlorophyll (greenness) + GLCM texture from a photo — used by the cloud-AI path. */
+export async function computeLeafMetrics(file: File): Promise<{ chl: number; glcm: number }> {
+  const bmp = await loadImage(file)
+  return leafMetrics(toCanvas(bmp, 256))
+}
+
 function toCanvas(bmp: ImageBitmap | HTMLImageElement, size: number) {
   const c = document.createElement('canvas')
   c.width = size

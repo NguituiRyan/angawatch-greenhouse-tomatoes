@@ -12,7 +12,7 @@ import {
   Stethoscope,
 } from 'lucide-react'
 import { useLeafScan, useLatest } from '@/api/hooks'
-import { classifyLeaf, warmupLeafModel } from '@/lib/leafModel'
+import { classifyLeafSmart } from '@/lib/leafScan'
 import { buildFarmActions, type FarmActionPlan, type Urgency } from '@/lib/farmAdvisor'
 import { Pill } from '@/components/ui/Pill'
 import type { Greenhouse, LeafScanResult } from '@/api/types'
@@ -57,8 +57,6 @@ export function LeafScanDialog({
     streamRef.current = null
   }
   useEffect(() => () => stopCamera(), [])
-  // start downloading the on-device model as soon as the dialog opens
-  useEffect(() => warmupLeafModel(), [])
 
   async function openCamera() {
     setError(undefined)
@@ -97,8 +95,8 @@ export function LeafScanDialog({
     setStep('analyzing')
     setError(undefined)
     try {
-      // real, free, on-device inference (PlantVillage model via onnxruntime-web)
-      finish(await classifyLeaf(file))
+      // cloud vision AI first (Gemini), on-device model as automatic fallback
+      finish(await classifyLeafSmart(file))
     } catch (e) {
       console.error('[leafModel] on-device inference failed, falling back to mock:', e)
       // fall back to the mock endpoint only if the model can't load/run
@@ -220,9 +218,9 @@ export function LeafScanDialog({
           <div className="flex flex-col items-center gap-3 py-10">
             {preview && <img src={preview} alt="" className="h-32 w-32 rounded-inner object-cover" />}
             <div className="flex items-center gap-2 text-sm font-medium text-ink">
-              <Loader2 size={16} className="animate-spin text-health-deep" /> Running AI analysis on your device…
+              <Loader2 size={16} className="animate-spin text-health-deep" /> Analysing your photo with AI…
             </div>
-            <p className="text-[11px] text-sage">First scan loads the model (~21 MB); after that it's instant and offline.</p>
+            <p className="text-[11px] text-sage">Cloud AI when configured, otherwise the free on-device model.</p>
           </div>
         )}
 
