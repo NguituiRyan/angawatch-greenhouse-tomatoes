@@ -46,7 +46,10 @@ export function HealthRing({
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 1.1s ease-out' }}
+          style={{
+            transition: 'stroke-dashoffset 1.1s ease-out',
+            filter: 'drop-shadow(0 3px 8px rgba(111, 178, 62, 0.45))',
+          }}
         />
       </svg>
       {showValue && (

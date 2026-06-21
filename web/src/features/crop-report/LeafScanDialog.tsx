@@ -218,7 +218,7 @@ export function LeafScanDialog({
             <div className="flex gap-2">
               <button
                 onClick={capture}
-                className="inline-flex items-center gap-2 rounded-full bg-lime px-5 py-2.5 text-sm font-semibold text-white shadow-pill transition hover:brightness-95"
+                className="btn-lime inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition"
               >
                 <Camera size={16} /> Capture & analyse
               </button>
@@ -329,7 +329,7 @@ export function LeafScanDialog({
             <div className="flex gap-2 pt-1">
               <button
                 onClick={reset}
-                className="inline-flex items-center gap-2 rounded-full bg-lime px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95"
+                className="btn-lime inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition"
               >
                 <RotateCcw size={15} /> Scan another
               </button>

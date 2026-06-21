@@ -34,7 +34,8 @@ export function AILeafPanel({ greenhouse }: { greenhouse: Greenhouse }) {
 
   return (
     <div className="relative mx-auto flex min-h-[440px] w-full max-w-[560px] flex-col items-center justify-center px-4 py-6">
-      {/* faint concentric halo behind the leaf */}
+      {/* soft lime glow + faint concentric halo behind the leaf */}
+      <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -z-0 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(163,203,56,0.28),transparent_62%)] blur-2xl" />
       <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -z-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/60 opacity-70" />
       <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -z-0 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70" />
 
@@ -88,11 +89,11 @@ export function AILeafPanel({ greenhouse }: { greenhouse: Greenhouse }) {
       )}
 
       {/* scan control */}
-      <div className="absolute right-2 top-2 z-30 sm:right-4">
+      <div className="absolute left-2 top-2 z-30 sm:left-4">
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="glass-strong inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-medium text-ink transition hover:text-health-deep"
+          className="btn-lime inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition"
         >
           <ScanLine size={14} /> Scan a leaf
         </button>

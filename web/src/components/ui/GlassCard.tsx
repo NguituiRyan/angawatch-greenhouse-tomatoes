@@ -25,7 +25,7 @@ export function GlassCard({
   as: Tag = 'div',
 }: GlassCardProps) {
   return (
-    <Tag className={cn('glass rounded-card relative', pad[padding], className)}>
+    <Tag className={cn('glass card-hover rounded-card relative', pad[padding], className)}>
       {menu && (
         <button
           type="button"
