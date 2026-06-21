@@ -1,46 +1,23 @@
 /**
  * Vercel serverless function — tomato leaf/fruit/stem diagnosis via Google Gemini
- * (free tier). The API key lives ONLY here as a server env var (GEMINI_API_KEY),
- * never in the browser or the repo.
+ * (free tier), PERSONALISED with the greenhouse's live node-sensor readings.
+ * The API key lives ONLY here as a server env var (GEMINI_API_KEY).
  *
- * Setup:
- *   1. Get a free key at https://aistudio.google.com/apikey
- *   2. Vercel → Project → Settings → Environment Variables → add GEMINI_API_KEY
- *   3. Redeploy. The dashboard's "Scan a leaf" will use Gemini automatically;
- *      if the key is missing or the call fails, the app falls back to the free
- *      on-device model.
+ * Setup: get a free key at https://aistudio.google.com/apikey, add GEMINI_API_KEY
+ * in Vercel → Settings → Environment Variables, redeploy. The app falls back to
+ * the free on-device model if the key is missing or the call fails.
  *
- * Request  (POST JSON): { imageBase64: string, mimeType?: string }
- * Response (JSON): { disease, disease_label, confidence, severity, is_healthy,
- *                    recommendation, alternatives:[{label,confidence}] }
+ * Request (POST JSON):
+ *   { imageBase64, mimeType?, sensors?: {airTempC,relativeHumidityPct,soilMoisturePct,
+ *     leafWetnessPct,co2Ppm,soilPh,ecDsPerM}, crop?, growthStage?, daysFromTransplant? }
  */
 
 const CLASSES = [
-  'Tomato_healthy',
-  'Tomato_Bacterial_spot',
-  'Tomato_Early_blight',
-  'Tomato_Late_blight',
-  'Tomato_Leaf_Mold',
-  'Tomato_Septoria_leaf_spot',
-  'Tomato_Spider_mites_two_spotted',
-  'Tomato_Target_Spot',
-  'Tomato_Yellow_Leaf_Curl_Virus',
-  'Tomato_mosaic_virus',
+  'Tomato_healthy', 'Tomato_Bacterial_spot', 'Tomato_Early_blight', 'Tomato_Late_blight',
+  'Tomato_Leaf_Mold', 'Tomato_Septoria_leaf_spot', 'Tomato_Spider_mites_two_spotted',
+  'Tomato_Target_Spot', 'Tomato_Yellow_Leaf_Curl_Virus', 'Tomato_mosaic_virus',
   'Tuta_absoluta_damage',
 ]
-
-const PROMPT = `You are an expert plant pathologist specializing in tomato (Solanum lycopersicum).
-Analyze the photo of a tomato plant part (leaf, fruit, or stem) and identify the single most
-likely condition, choosing exactly one id from this allowed set:
-${CLASSES.join(', ')}.
-
-Rules:
-- Be calibrated: only give high confidence (>0.8) when symptoms are visually clear.
-- If the image is not clearly a tomato plant, or is blurry/too far, pick the closest class but
-  set confidence below 0.4 and say so in the recommendation.
-- "Tuta_absoluta_damage" = irregular translucent leaf mines / blotch mines with frass.
-- Give a concise, practical recommendation a Kenyan greenhouse farmer can act on (1-2 sentences).
-- Provide up to 3 alternatives (other plausible conditions) with their confidences.`
 
 const SCHEMA = {
   type: 'OBJECT',
@@ -63,6 +40,43 @@ const SCHEMA = {
   required: ['disease', 'disease_label', 'confidence', 'severity', 'is_healthy', 'recommendation'],
 }
 
+function buildPrompt(body) {
+  const { sensors, crop, growthStage, daysFromTransplant } = body
+  let ctx = ''
+  if (sensors && typeof sensors === 'object') {
+    const parts = [
+      sensors.airTempC != null && `air temp ${sensors.airTempC}°C`,
+      sensors.relativeHumidityPct != null && `relative humidity ${sensors.relativeHumidityPct}%`,
+      sensors.soilMoisturePct != null && `soil moisture ${sensors.soilMoisturePct}%`,
+      sensors.leafWetnessPct != null && `leaf wetness ${sensors.leafWetnessPct}%`,
+      sensors.co2Ppm != null && `CO2 ${sensors.co2Ppm} ppm`,
+      sensors.soilPh != null && `soil pH ${sensors.soilPh}`,
+      sensors.ecDsPerM != null && `fertigation EC ${sensors.ecDsPerM} dS/m`,
+    ].filter(Boolean)
+    if (parts.length) {
+      ctx =
+        `\n\nThis greenhouse's LIVE node-sensor readings right now: ${parts.join(', ')}.` +
+        (crop ? ` Crop: ${crop}.` : '') +
+        (growthStage ? ` Growth stage: ${growthStage}.` : '') +
+        (daysFromTransplant != null ? ` Day ${daysFromTransplant} from transplant.` : '') +
+        `\nTomato optima: air 21-27°C, RH 65-75%, soil moisture 60-80%. ` +
+        `In "recommendation", connect these specific readings to the disease risk and give ` +
+        `prioritised, personalised actions for THIS greenhouse (e.g. how much to ventilate to ` +
+        `reach the target RH, irrigation/fertigation tweaks, and timing for the growth stage).`
+    }
+  }
+  return (
+    `You are an expert plant pathologist specializing in tomato (Solanum lycopersicum) for a ` +
+    `Kenyan greenhouse. Identify the single most likely condition from this allowed set: ` +
+    `${CLASSES.join(', ')}.\n` +
+    `Be calibrated: only give confidence >0.8 when symptoms are clearly visible; if the image ` +
+    `is not clearly a tomato plant or is blurry, pick the closest class but set confidence <0.4 ` +
+    `and say so. "Tuta_absoluta_damage" = irregular translucent leaf mines with frass. Provide ` +
+    `up to 3 alternatives with confidences.` +
+    ctx
+  )
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Use POST' })
@@ -81,37 +95,45 @@ export default async function handler(req, res) {
       return
     }
 
-    const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`
+    // Try current free-tier models in order; free tier rotates between versions.
+    const models = [...new Set([
+      process.env.GEMINI_MODEL, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest',
+      'gemini-1.5-flash',
+    ].filter(Boolean))]
+
     const payload = {
       contents: [
-        { parts: [{ text: PROMPT }, { inline_data: { mime_type: mimeType, data: imageBase64 } }] },
+        { parts: [{ text: buildPrompt(body) }, { inline_data: { mime_type: mimeType, data: imageBase64 } }] },
       ],
-      generationConfig: {
-        temperature: 0.1,
-        responseMimeType: 'application/json',
-        responseSchema: SCHEMA,
-      },
+      generationConfig: { temperature: 0.1, responseMimeType: 'application/json', responseSchema: SCHEMA },
     }
 
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    if (!r.ok) {
+    let last = { status: 0, model: '', detail: '' }
+    for (const model of models) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (r.ok) {
+        const data = await r.json()
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+        if (text) {
+          const parsed = JSON.parse(text)
+          parsed.model_used = model
+          res.status(200).json(parsed)
+          return
+        }
+        last = { status: 502, model, detail: 'empty response' }
+        continue
+      }
       const detail = await r.text().catch(() => '')
-      res.status(502).json({ error: 'gemini_error', status: r.status, detail: detail.slice(0, 600) })
-      return
+      last = { status: r.status, model, detail: detail.slice(0, 300) }
+      // only keep trying on quota / model-not-found; stop on real request errors
+      if (![429, 404, 403].includes(r.status)) break
     }
-    const data = await r.json()
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!text) {
-      res.status(502).json({ error: 'no_content', detail: JSON.stringify(data).slice(0, 600) })
-      return
-    }
-    const parsed = JSON.parse(text)
-    res.status(200).json(parsed)
+    res.status(502).json({ error: 'gemini_error', ...last })
   } catch (e) {
     res.status(500).json({ error: 'server_error', detail: String(e).slice(0, 300) })
   }

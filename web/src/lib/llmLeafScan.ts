@@ -10,6 +10,14 @@ import type { LeafScanResult, Severity } from '@/api/types'
 import { LEAF_CLASSES, LEAF_CLASS_LABELS, type LeafClass } from '@/config/tomato'
 import { computeLeafMetrics } from './leafModel'
 
+/** Live node-sensor + crop context sent to the cloud AI for personalised advice. */
+export interface ScanContext {
+  sensors?: Record<string, number | undefined>
+  crop?: string
+  growthStage?: string
+  daysFromTransplant?: number
+}
+
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 const SEV_BASE: Record<Severity, number> = { none: 92, low: 72, moderate: 52, high: 32 }
 
@@ -40,12 +48,19 @@ async function toBase64(file: File, max = 768): Promise<string> {
   return canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
 }
 
-export async function classifyLeafViaLLM(file: File): Promise<LeafScanResult> {
+export async function classifyLeafViaLLM(file: File, context?: ScanContext): Promise<LeafScanResult> {
   const imageBase64 = await toBase64(file)
   const res = await fetch('/api/leaf-scan', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ imageBase64, mimeType: 'image/jpeg' }),
+    body: JSON.stringify({
+      imageBase64,
+      mimeType: 'image/jpeg',
+      sensors: context?.sensors,
+      crop: context?.crop,
+      growthStage: context?.growthStage,
+      daysFromTransplant: context?.daysFromTransplant,
+    }),
   })
   if (!res.ok) throw new Error(`cloud AI unavailable (${res.status})`)
   const g = await res.json()

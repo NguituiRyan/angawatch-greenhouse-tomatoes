@@ -95,8 +95,24 @@ export function LeafScanDialog({
     setStep('analyzing')
     setError(undefined)
     try {
-      // cloud vision AI first (Gemini), on-device model as automatic fallback
-      finish(await classifyLeafSmart(file))
+      // cloud vision AI first (Gemini) — personalised with live node-sensor
+      // readings — and the on-device model as automatic fallback
+      finish(
+        await classifyLeafSmart(file, {
+          sensors: latest && {
+            airTempC: latest.airTempC,
+            relativeHumidityPct: latest.relativeHumidityPct,
+            soilMoisturePct: latest.soilMoisturePct,
+            leafWetnessPct: latest.leafWetnessPct,
+            co2Ppm: latest.co2Ppm,
+            soilPh: latest.soilPh,
+            ecDsPerM: latest.ecDsPerM,
+          },
+          crop: greenhouse.cropVariety,
+          growthStage: greenhouse.growthStage,
+          daysFromTransplant: greenhouse.daysFromTransplant,
+        }),
+      )
     } catch (e) {
       console.error('[leafModel] on-device inference failed, falling back to mock:', e)
       // fall back to the mock endpoint only if the model can't load/run
@@ -249,6 +265,13 @@ export function LeafScanDialog({
                 </div>
               </div>
             </div>
+
+            {result.recommendation && (
+              <div className="rounded-inner bg-lime-tint/50 p-3 text-xs leading-snug text-ink">
+                <span className="font-semibold text-health-deep">Personalised advice: </span>
+                {result.recommendation}
+              </div>
+            )}
 
             {result.low_confidence && (
               <div className="flex items-start gap-2 rounded-inner bg-spectrum-amber/15 p-3 text-xs text-ink">
