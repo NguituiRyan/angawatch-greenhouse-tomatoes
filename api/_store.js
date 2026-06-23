@@ -6,8 +6,9 @@
  *
  * Files starting with "_" in /api are helpers, not HTTP routes.
  */
-const KV_URL = process.env.KV_REST_API_URL
-const KV_TOKEN = process.env.KV_REST_API_TOKEN
+// Accept either naming (Vercel KV or the Upstash Redis marketplace integration)
+const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
 const mem = globalThis.__angawatch_store || (globalThis.__angawatch_store = new Map())
 
 export const storeBackend = KV_URL && KV_TOKEN ? 'kv' : 'memory'
