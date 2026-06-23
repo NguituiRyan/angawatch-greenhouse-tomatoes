@@ -7,3 +7,8 @@ ml/data
 ml/models
 ml/export
 .git
+
+showcase
+tools
+*.rar
+uploads_files_*

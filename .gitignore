@@ -21,3 +21,10 @@ Thumbs.db
 
 # large model binaries (loaded from HF CDN at runtime)
 web/public/models/*.onnx
+
+# separate / uploaded folders — not part of this app
+showcase/
+tools/
+*.rar
+uploads_files_*/
+node_modules/

@@ -23,7 +23,14 @@ export const useGreenhouses = () =>
   useQuery({ queryKey: qk.greenhouses, queryFn: api.greenhouses })
 
 export const useLatest = (id: string) =>
-  useQuery({ queryKey: qk.latest(id), queryFn: () => api.latest(id), enabled: !!id })
+  useQuery({
+    queryKey: qk.latest(id),
+    queryFn: () => api.latest(id),
+    enabled: !!id,
+    // live feel: poll the device feed every 10s
+    refetchInterval: 10_000,
+    refetchOnWindowFocus: true,
+  })
 
 export const useSuitability = (id: string, range: TimeRange) =>
   useQuery({

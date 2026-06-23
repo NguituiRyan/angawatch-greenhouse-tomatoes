@@ -39,7 +39,22 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   greenhouses: () => http<Greenhouse[]>('/greenhouses'),
 
-  latest: (id: string) => http<LatestTelemetry>(`/greenhouses/${id}/latest`),
+  // Prefer the live device feed (/api/latest); fall back to mock/platform data
+  // when no node has posted (404) or in local dev (no serverless function).
+  latest: async (id: string): Promise<LatestTelemetry> => {
+    try {
+      const r = await fetch(`/api/latest?gh=${encodeURIComponent(id)}`, {
+        headers: { Accept: 'application/json' },
+      })
+      if (r.ok) {
+        const live = (await r.json()) as LatestTelemetry
+        if (live && typeof live.airTempC === 'number') return live
+      }
+    } catch {
+      /* fall back below */
+    }
+    return http<LatestTelemetry>(`/greenhouses/${id}/latest`)
+  },
 
   suitability: (id: string, range: TimeRange) =>
     http<SuitabilitySeries>(
