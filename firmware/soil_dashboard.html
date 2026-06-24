@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>AngaWatch · Soil Probe</title>
+<style>
+  :root{
+    --good:#7ed957; --watch:#ffc24b; --act:#ff6f61; --neutral:#9fe3c6;
+    --ink:#eaf6ea; --muted:#9fb7a4; --lime:#b6e34a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
+    color:var(--ink); min-height:100%;
+    background:
+      radial-gradient(60% 50% at 15% 10%, rgba(120,210,90,.22), transparent 60%),
+      radial-gradient(55% 45% at 90% 20%, rgba(60,200,150,.18), transparent 60%),
+      radial-gradient(60% 50% at 70% 95%, rgba(80,180,120,.16), transparent 60%),
+      linear-gradient(160deg,#0f2417,#123018 45%,#0b1d12);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:22px 16px 40px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand svg{filter:drop-shadow(0 4px 10px rgba(120,210,90,.35))}
+  .brand h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.02em}
+  .brand h1 span{color:var(--lime)}
+  .brand p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+  .live{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    padding:7px 12px;border-radius:999px;backdrop-filter:blur(8px)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 rgba(126,217,87,.6);animation:pulse 1.8s infinite}
+  .dot.off{background:var(--act);animation:none}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(126,217,87,.5)}70%{box-shadow:0 0 0 7px rgba(126,217,87,0)}100%{box-shadow:0 0 0 0 rgba(126,217,87,0)}}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}
+  @media(min-width:620px){.grid{grid-template-columns:repeat(3,1fr)}}
+  .card{
+    position:relative;overflow:hidden;border-radius:20px;padding:15px 16px 16px;
+    background:linear-gradient(160deg,rgba(255,255,255,.10),rgba(255,255,255,.05));
+    border:1px solid rgba(255,255,255,.14);
+    backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);
+    box-shadow:0 14px 34px -16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.16);
+  }
+  .card .glow{position:absolute;right:-26px;top:-26px;width:80px;height:80px;border-radius:50%;filter:blur(26px);opacity:.5}
+  .card .top{display:flex;align-items:center;justify-content:space-between}
+  .card .label{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+  .pill{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:999px}
+  .val{margin-top:8px;font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .val .u{font-size:13px;font-weight:600;color:var(--muted);margin-left:3px}
+  .bar{margin-top:12px;height:6px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;overflow:hidden}
+  .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:999px;transition:width .6s cubic-bezier(.2,.7,.3,1)}
+  .hint{margin-top:8px;font-size:10.5px;color:var(--muted);line-height:1.3}
+  footer{margin-top:22px;text-align:center;font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 36 36" fill="none" aria-hidden>
+        <path d="M18 3C10 3 4 9 4 18c0 8 6 15 14 15 1.2 0 1.4-1.2 1.4-2.3C19.4 23 24 17 31 15c1.3-.4 1.2-1.4.6-2.4C28 6.5 23.6 3 18 3Z" fill="#b6e34a"/>
+        <path d="M11 22c4-7 9-11 17-13" stroke="#3f8e2f" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1>Anga<span>Watch</span></h1>
+        <p>Greenhouse GH-01 · soil probe</p>
+      </div>
+    </div>
+    <div class="live"><span class="dot" id="dot"></span><span id="status">connecting…</span></div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>7-in-1 soil probe · readings refresh every few seconds · AngaWatch Greenhouse</footer>
+</div>
+
+<script>
+// ---- metric config (tomato-oriented; ideal bands grounded in agronomy refs) ----
+const METRICS = [
+  { key:'temp',  label:'Soil Temp',  unit:'°C',    min:0,  max:40,   good:[18,26], warn:[14,30], hint:'Roots happiest 18–26 °C.' },
+  { key:'moist', label:'Moisture',   unit:'%',     min:0,  max:100,  good:[60,80], warn:[45,90], hint:'Hold 60–80%; avoid swings (blossom-end rot).' },
+  { key:'ph',    label:'pH',         unit:'',      min:3,  max:9,    good:[6.0,6.8], warn:[5.5,7.3], hint:'6.0–6.8 keeps nutrients available.' },
+  { key:'ec',    label:'EC',         unit:'µS/cm', min:0,  max:2000, good:[200,1500], warn:[100,1800], hint:'Salts/fertility. Calibrate to your soil.' },
+  { key:'n',     label:'Nitrogen',   unit:'mg/kg', min:0,  max:300,  hint:'Leaf & canopy growth.' },
+  { key:'p',     label:'Phosphorus', unit:'mg/kg', min:0,  max:150,  hint:'Roots, flowering & fruit set.' },
+  { key:'k',     label:'Potassium',  unit:'mg/kg', min:0,  max:400,  hint:'Fruit fill, quality & disease resistance.' },
+];
+const TONE = { good:'#7ed957', watch:'#ffc24b', act:'#ff6f61', neutral:'#9fe3c6' };
+
+function verdict(v, m){
+  if(v==null||isNaN(v)) return {level:'neutral', text:'—'};
+  if(!m.good) return {level:'neutral', text:'reading'};
+  const [g1,g2]=m.good, [w1,w2]=m.warn;
+  if(v>=g1 && v<=g2) return {level:'good', text:'Ideal'};
+  if(v>=w1 && v<=w2) return {level:'watch', text:v<g1?'Low':'High'};
+  return {level:'act', text:v<g1?'Too low':'Too high'};
+}
+
+// build cards once
+const grid=document.getElementById('grid');
+const refs={};
+for(const m of METRICS){
+  const c=document.createElement('div'); c.className='card';
+  c.innerHTML=`<div class="glow"></div>
+    <div class="top"><span class="label">${m.label}</span><span class="pill"></span></div>
+    <div class="val"><span class="num">--</span><span class="u">${m.unit}</span></div>
+    <div class="bar"><i></i></div>
+    <div class="hint">${m.hint||''}</div>`;
+  grid.appendChild(c);
+  refs[m.key]={num:c.querySelector('.num'),pill:c.querySelector('.pill'),bar:c.querySelector('.bar i'),glow:c.querySelector('.glow')};
+}
+
+function render(d){
+  for(const m of METRICS){
+    const r=refs[m.key]; let v=d?d[m.key]:null;
+    const vd=verdict(v,m); const tone=TONE[vd.level];
+    r.num.textContent=(v==null||isNaN(v))?'--':(Number.isInteger(v)?v:Number(v).toFixed(1));
+    r.pill.textContent=vd.text;
+    r.pill.style.background=tone+'22'; r.pill.style.color=tone;
+    const pct=v==null?0:Math.max(0,Math.min(100,((v-m.min)/(m.max-m.min))*100));
+    r.bar.style.width=pct+'%';
+    r.bar.style.background=`linear-gradient(90deg,${tone}, ${tone}cc)`;
+    r.glow.style.background=tone;
+  }
+}
+
+let lastOk=0;
+function setStatus(ok){
+  const dot=document.getElementById('dot'), s=document.getElementById('status');
+  if(ok){dot.classList.remove('off'); s.textContent='live · updated '+new Date().toLocaleTimeString();}
+  else{dot.classList.add('off'); s.textContent='reconnecting…';}
+}
+
+// demo values so the page looks alive when opened standalone (file://)
+function demo(){
+  const r=(a,b)=>+(a+Math.random()*(b-a)).toFixed(1);
+  return {ok:true,temp:r(21,24),moist:r(63,76),ph:r(6.1,6.7),ec:Math.round(r(700,1200)),
+          n:Math.round(r(90,160)),p:Math.round(r(30,70)),k:Math.round(r(150,260))};
+}
+
+async function tick(){
+  try{
+    const res=await fetch('./data',{cache:'no-store'});
+    if(!res.ok) throw 0;
+    const d=await res.json();
+    render(d); setStatus(!!d.ok); lastOk=Date.now();
+  }catch(e){
+    // not served by the ESP (e.g. opened as a file) → show demo data
+    render(demo()); setStatus(false);
+  }
+}
+tick(); setInterval(tick, 2500);
+</script>
+</body>
+</html>
